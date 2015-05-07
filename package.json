@@ -1,8 +1,8 @@
 {
-  "name": "ion-google-place",
+  "name": "ion-google-autocomplete",
   "version": "1.0.2",
-  "description": "ion-google-place ================",
-  "main": "ion-google-place.js",
+  "description": "ion-google-autocomplete ================",
+  "main": "ion-google-autocomplete.js",
   "directories": {
     "test": "test"
   },
@@ -14,12 +14,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/izifortune/ion-google-place.git\t"
+    "url": "https://github.com/guillahume/ion-google-autocomplete.git\t"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/izifortune/ion-google-place.git\t/issues"
+    "url": "https://github.com/guillahume/ion-google-autocomplete.git\t/issues"
   },
-  "homepage": "https://github.com/izifortune/ion-google-place.git\t"
+  "homepage": "https://github.com/guillahume/ion-google-autocomplete.git\t"
 }

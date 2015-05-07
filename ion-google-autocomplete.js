@@ -1,5 +1,5 @@
-angular.module('ion-google-place', [])
-    .directive('ionGooglePlace', [
+angular.module('ion-google-autocomplete', [])
+    .directive('ionGoogleAutocomplete', [
         '$ionicTemplateLoader',
         '$ionicBackdrop',
         '$ionicPlatform',
@@ -11,25 +11,27 @@ angular.module('ion-google-place', [])
             return {
                 require: '?ngModel',
                 restrict: 'E',
-                template: '<input type="text" readonly="readonly" class="ion-google-place" autocomplete="off">',
+                template: '<input type="text" readonly="readonly" class="ion-google-autocomplete" autocomplete="off">',
                 replace: true,
                 scope: {
                     ngModel: '=?',
-                    geocodeOptions: '='
+                    placesOptions: '='
                 },
                 link: function(scope, element, attrs, ngModel) {
                     var unbindBackButtonAction;
 
                     scope.locations = [];
-                    var geocoder = new google.maps.Geocoder();
+                    var autocompleteService = new google.maps.places.AutocompleteService();
+                    var obj = $('<div>').appendTo('body');
+                    var placesService = new google.maps.places.PlacesService(obj.get(0));
                     var searchEventTimeout = undefined;
 
                     var POPUP_TPL = [
-                        '<div class="ion-google-place-container modal">',
+                        '<div class="ion-google-autocomplete-container modal">',
                             '<div class="bar bar-header item-input-inset">',
                                 '<label class="item-input-wrapper">',
                                     '<i class="icon ion-ios7-search placeholder-icon"></i>',
-                                    '<input class="google-place-search" type="search" ng-model="searchQuery" placeholder="' + (attrs.searchPlaceholder || 'Enter an address, place or ZIP code') + '">',
+                                    '<input class="google-autocomplete-search" type="search" ng-model="searchQuery" placeholder="' + (attrs.searchPlaceholder || 'Enter an address, place or ZIP code') + '">',
                                 '</label>',
                                 '<button class="button button-clear">',
                                     attrs.labelCancel || 'Cancel',
@@ -38,7 +40,7 @@ angular.module('ion-google-place', [])
                             '<ion-content class="has-header has-header">',
                                 '<ion-list>',
                                     '<ion-item ng-repeat="location in locations" type="item-text-wrap" ng-click="selectLocation(location)">',
-                                        '{{location.formatted_address}}',
+                                        '{{location.description}}',
                                     '</ion-item>',
                                 '</ion-list>',
                             '</ion-content>',
@@ -54,8 +56,12 @@ angular.module('ion-google-place', [])
                     popupPromise.then(function(el){
                         var searchInputElement = angular.element(el.element.find('input'));
 
+                        // when item in list is selected
                         scope.selectLocation = function(location){
-                            ngModel.$setViewValue(location);
+                            var details = placesService.getDetails({reference:location.reference}, function(result, status){
+                                if (status === google.maps.places.PlacesServiceStatus.OK) {
+
+                            ngModel.$setViewValue(result);
                             ngModel.$render();
                             el.element.css('display', 'none');
                             $ionicBackdrop.release();
@@ -64,6 +70,9 @@ angular.module('ion-google-place', [])
                                 unbindBackButtonAction();
                                 unbindBackButtonAction = null;
                             }
+                                }
+                            });
+                            return;
                         };
 
                         scope.$watch('searchQuery', function(query){
@@ -72,20 +81,23 @@ angular.module('ion-google-place', [])
                                 if(!query) return;
                                 if(query.length < 3);
 
-                                var req = scope.geocodeOptions || {};
-                                req.address = query;
-                                geocoder.geocode(req, function(results, status) {
-                                    if (status == google.maps.GeocoderStatus.OK) {
+                                var req = scope.placesOptions || {};
+                                req.input = query;
+
+                                autocompleteService.getPlacePredictions(req, function(predictions, status){
+                                    if (status == google.maps.places.PlacesServiceStatus.OK) {
                                         scope.$apply(function(){
-                                            scope.locations = results;
+                                            scope.locations = predictions;
                                         });
                                     } else {
-                                        // @TODO: Figure out what to do when the geocoding fails
+                                        // @TODO: Figure out what to do when the autocomplete fails
                                     }
                                 });
                             }, 350); // we're throttling the input by 350ms to be nice to google's API
                         });
 
+
+                        // when input is clicked
                         var onClick = function(e){
                             e.preventDefault();
                             e.stopPropagation();
